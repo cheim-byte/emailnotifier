@@ -221,7 +221,8 @@ def check_emails():
             priority_map = {"HIGH": "urgent", "MEDIUM": "default", "LOW": "low"}
             tags_map = {"HIGH": "rotating_light,email", "MEDIUM": "email", "LOW": "email"}
             
-            draft_preview = (draft_reply[:400] + "...") if len(draft_reply) > 400 else draft_reply
+            # Full draft in notification (ntfy supports up to ~4000 chars)
+            draft_preview = draft_reply if len(draft_reply) <= 3500 else (draft_reply[:3500] + "\n...[truncated - see dashboard]")
             
             notif_title = f"[{importance}] #{email_db_id} {subject[:40]}"
             notif_body = f"From: {sender[:60]}\n{importance_reason}\n\n--- DRAFT REPLY ---\n{draft_preview}\n\nReply via command topic: send {email_db_id} | redo {email_db_id} <notes> | dismiss {email_db_id}"
@@ -382,7 +383,7 @@ def handle_command(text):
             )
             conn.execute("UPDATE emails SET draft_reply = ? WHERE id = ?", (new_draft, email_id))
             conn.commit()
-            preview = (new_draft[:400] + "...") if len(new_draft) > 400 else new_draft
+            preview = new_draft if len(new_draft) <= 3500 else (new_draft[:3500] + "\n...[truncated - see dashboard]")
             actions = None
             if APP_URL:
                 actions = f"http, Approve & Send, {APP_URL}/api/emails/{email_id}/send-approved?token={APP_TOKEN}, method=POST, clear=true"
