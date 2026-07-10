@@ -344,10 +344,11 @@ def get_stats():
     conn.close()
     return jsonify({"total": total, "pending": pending, "sent": sent, "high_priority": high})
 
+# Initialize DB and start the monitor thread on import (works under gunicorn)
+init_db()
+monitor_thread = threading.Thread(target=email_monitor_loop, daemon=True)
+monitor_thread.start()
+
 if __name__ == '__main__':
-    init_db()
-    # Start email monitor in background thread
-    monitor_thread = threading.Thread(target=email_monitor_loop, daemon=True)
-    monitor_thread.start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
